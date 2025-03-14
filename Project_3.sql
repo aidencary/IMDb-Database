@@ -150,7 +150,7 @@ CREATE TABLE Media(
 -------------------------------------------
 -- Inserts for Movie
 
--- Insert into Movie table
+
 INSERT INTO Movie (Title, Rating, ReleaseDate, RunTime, Description, AgeRating, URLID)
 VALUES ('Inception', 9, TO_DATE('2010-07-16', 'YYYY-MM-DD'), 148.0, 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.', 'PG-13', 'M00000001');
 
@@ -195,7 +195,7 @@ VALUES ('M00000003', 3); -- The Godfather, Streaming: Hulu
 ----------------------------------------------------------------------
 
 -- Inserts for Director
--- Insert into Director table
+
 INSERT INTO Director (URLID, FirstName, MiddleName, LastName, PlaceOfBirth, Height, Spouse, Bdate, Biography, DateOfBirth, DateOfDeath)
 VALUES ('D00000001', 'Christopher', 'Nolan', 'Nolan', 'London', 182.0, 'Emma', TO_DATE('1970-07-30', 'YYYY-MM-DD'), 'Christopher Nolan is a British-American film director, producer, and screenwriter. He is known for his distinctive visual style and complex storytelling.', TO_DATE('1970-07-30', 'YYYY-MM-DD'), NULL);
 
@@ -237,6 +237,8 @@ VALUES ('D00000003', 'Goodfellas Behind the Scenes');
 
 ----------------------------------------------------------------------
 
+-- Director Foreign Keys
+
 -- Foreign Key Director_Awards URLID that points to the URLID of the Director table
 ALTER TABLE Director_Awards
 ADD CONSTRAINT director_awards_fk FOREIGN KEY(URLID)
@@ -257,6 +259,8 @@ ALTER TABLE Director_Media
 ADD CONSTRAINT director_media_fk FOREIGN KEY(URLID)
 REFERENCES Director(URLID);
 
+-- Director and Movie M:N Relationship
+
 -- Foreign Key Director_Movie DirectorID that points to the URLID of the Director table
 ALTER TABLE Director_Movie
 ADD CONSTRAINT director_movie_director_fk FOREIGN KEY(DirectorID)
@@ -267,11 +271,14 @@ ALTER TABLE Director_Movie
 ADD CONSTRAINT director_movie_movie_fk FOREIGN KEY(MovieID)
 REFERENCES Movie(URLID);
 
+-- Movie Foreign Keys
+
 -- Foreign Key Movie GenreID that points to the GenreID of the Movie_Genre table
 ALTER TABLE Movie_Genre
 ADD CONSTRAINT movie_genre_fk FOREIGN KEY(MovieID)
 REFERENCES Movie(URLID);
 
+-- Foreign Key Movie GenreID that points to the GenreID of the Genre table
 ALTER TABLE Movie_Genre
 ADD CONSTRAINT genre_fk FOREIGN KEY(GenreID)
 REFERENCES Genre(GenreID);
@@ -281,9 +288,12 @@ ALTER TABLE Movie_Streaming
 ADD CONSTRAINT movie_streaming_fk FOREIGN KEY(MovieID)
 REFERENCES Movie(URLID);
 
+-- Foreign Key Movie StreamingID that points to the StreamingID of the Streaming table
 ALTER TABLE Movie_Streaming
 ADD CONSTRAINT streaming_fk FOREIGN KEY(StreamingID)
 REFERENCES Streaming(StreamingID);
+
+-- Derived Attributes
 
 -- View to calculate the Age derived attribute for each director
 CREATE VIEW Director_With_Age AS
@@ -292,5 +302,3 @@ SELECT
     FLOOR(MONTHS_BETWEEN(SYSDATE, D.DateOfBirth) / 12) AS Age
 FROM 
     Director D;
-
--------------------------------------------------------------
