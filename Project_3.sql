@@ -2,7 +2,6 @@ DROP TABLE Movie CASCADE CONSTRAINTS;
 DROP TABLE Movie_Genre CASCADE CONSTRAINTS;
 DROP TABLE Movie_Streaming CASCADE CONSTRAINTS;
 DROP TABLE Director CASCADE CONSTRAINTS;
-DROP TABLE Director_Awards CASCADE CONSTRAINTS;
 DROP TABLE Director_Children CASCADE CONSTRAINTS;
 DROP TABLE Director_Parents CASCADE CONSTRAINTS;
 DROP TABLE Director_Media CASCADE CONSTRAINTS;
@@ -22,6 +21,12 @@ CREATE TABLE Movie(
 
 -- Movie_Genre table
 
+-- Example query to retrieve movies and their genres
+-- SELECT M.Title, G.Name AS Genre
+-- FROM Movie M
+-- JOIN Movie_Genre MG ON M.URLID = MG.MovieID
+-- JOIN Genre G ON MG.GenreID = G.GenreID;
+
 CREATE TABLE Movie_Genre(
     MovieID CHAR(9) CONSTRAINT Movie_Genre_MovieID_FK REFERENCES Movie(URLID),
     GenreID NUMBER CONSTRAINT Movie_Genre_GenreID_FK REFERENCES Genre(GenreID),
@@ -30,11 +35,28 @@ CREATE TABLE Movie_Genre(
 
 -- Movie_Streaming table
 
+-- Example query to retrieve movies and their streaming platforms
+-- SELECT M.Title, S.Name AS StreamingPlatform
+-- FROM Movie M
+-- JOIN Movie_Streaming MS ON M.URLID = MS.MovieID
+-- JOIN Streaming S ON MS.StreamingID = S.StreamingID;
+
 CREATE TABLE Movie_Streaming(
     MovieID     CHAR(9) CONSTRAINT Movie_Streaming_MovieID_FK REFERENCES Movie(URLID),
     StreamingID NUMBER CONSTRAINT Movie_Streaming_StreamingID_FK REFERENCES Streaming(StreamingID),
     CONSTRAINT Movie_Streaming_PK PRIMARY KEY (MovieID, StreamingID)
 );
+
+-- TV_Show Table
+CREATE TABLE TV_Show(
+    Title       VARCHAR2(40),
+    Rating      NUMBER(2) DEFAULT 0, -- Rating is out of 10. Rating will eventually be changed to a derived attribute using the average of all user ratings from the MovieRatings entity
+    ReleaseDate DATE,
+    Description VARCHAR2(1000),
+    AgeRating   VARCHAR2(5),
+    URLID       CHAR(9) CONSTRAINT Movie_MovieID_PK PRIMARY KEY
+);
+
 
 -- Director table
 
@@ -49,18 +71,16 @@ CREATE TABLE Director(
     Bdate       DATE,
     Biography   VARCHAR2(1000),
     DateOfBirth DATE,
-    DateOfDeath DATE DEFAULT NULL
-);
-
--- Director_Awards table
-
-CREATE TABLE Director_Awards(
-    URLID   CHAR(9) CONSTRAINT Director_Awards_URLID_FK REFERENCES Director(URLID),
-    Award VARCHAR2(100),
-    CONSTRAINT Director_Awards_PK PRIMARY KEY (URLID, Award)
+    DateOfDeath DATE DEFAULT NULL,
+    Award       VARCHAR2(100) -- Single-value attribute for awards
 );
 
 -- Director_Children table
+
+-- Example query to retrieve directors and their children
+-- SELECT D.FirstName, D.LastName, DC.Child
+-- FROM Director D
+-- JOIN Director_Children DC ON D.URLID = DC.URLID;
 
 CREATE TABLE Director_Children(
     URLID   CHAR(9) CONSTRAINT Director_Children_URLID_FK REFERENCES Director(URLID),
@@ -70,6 +90,11 @@ CREATE TABLE Director_Children(
 
 -- Director_Parents table
 
+-- Example query to retrieve directors and their parents
+-- SELECT D.FirstName, D.LastName, DP.Parent
+-- FROM Director D
+-- JOIN Director_Parents DP ON D.URLID = DP.URLID;
+
 CREATE TABLE Director_Parents(
     URLID   CHAR(9) CONSTRAINT Director_Parents_URLID_FK REFERENCES Director(URLID),
     Parent VARCHAR2(100),
@@ -77,6 +102,11 @@ CREATE TABLE Director_Parents(
 );
 
 -- Director_Media table
+
+-- Example query to retrieve directors and their media appearances
+-- SELECT D.FirstName, D.LastName, DM.Media
+-- FROM Director D
+-- JOIN Director_Media DM ON D.URLID = DM.URLID;
 
 CREATE TABLE Director_Media(
     URLID   CHAR(9) CONSTRAINT Director_Media_URLID_FK REFERENCES Director(URLID),
@@ -86,70 +116,20 @@ CREATE TABLE Director_Media(
 
 -- Director_Movie junction table
 
+-- Example query to retrieve directors and their movies
+-- SELECT D.FirstName, D.LastName, M.Title AS Movie
+-- FROM Director D
+-- JOIN Director_Movie DM ON D.URLID = DM.DirectorID
+-- JOIN Movie M ON DM.MovieID = M.URLID;
+
 CREATE TABLE Director_Movie(
     DirectorID CHAR(9),
     MovieID    CHAR(9),
     CONSTRAINT Director_Movie_PK PRIMARY KEY (DirectorID, MovieID)
 );
 
--- Streaming table
-
-CREATE TABLE Streaming(
-    StreamingID NUMBER(2) CONSTRAINT Streaming_PK PRIMARY KEY,
-    Name        VARCHAR2(50)
-);
-
--- Genre table
-
-CREATE TABLE Genre(
-    GenreID NUMBER(2) CONSTRAINT Genre_PK PRIMARY KEY,
-    Name    VARCHAR2(20)
-    -- 1 = Sci-Fi
-    -- 2 = Action
-    -- 3 = Crime
-    -- 4 = Drama
-    -- 5 = Comedy
-    -- 6 = Romance
-    -- 7 = Horror
-    -- 8 = Mystery
-    -- 9 = Thriller
-    -- 10 = Fantasy
-    -- 11 = Adventure
-);
-
-CREATE TABLE Award(
-    AwardID NUMBER(2) CONSTRAINT Award_PK PRIMARY KEY,
-    Name    VARCHAR2(20)
-    -- 1 = Oscar
-    -- 2 = Golden Globe
-    -- 3 = BAFTA
-    -- 4 = Emmy
-    -- 5 = Grammy
-    -- 6 = Tony
-    -- 7 = Cannes
-    -- 8 = Berlin
-    -- 9 = Venice
-    -- 10 = Sundance
-);
-
-CREATE TABLE Children(
-    ChildID CHAR(9) CONSTRAINT Child_PK PRIMARY KEY,
-    Name   VARCHAR2(20)
-);
-
-CREATE TABLE Parents(
-    ParentID CHAR(9) CONSTRAINT Parent_PK PRIMARY KEY,
-    Name   VARCHAR2(20)
-);
-
-CREATE TABLE Media(
-    MediaID CHAR(9) CONSTRAINT Media_PK PRIMARY KEY,
-    Name   VARCHAR2(20)
-);
-
 -------------------------------------------
 -- Inserts for Movie
-
 
 INSERT INTO Movie (Title, Rating, ReleaseDate, RunTime, Description, AgeRating, URLID)
 VALUES ('Inception', 9, TO_DATE('2010-07-16', 'YYYY-MM-DD'), 148.0, 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.', 'PG-13', 'M00000001');
@@ -196,14 +176,14 @@ VALUES ('M00000003', 3); -- The Godfather, Streaming: Hulu
 
 -- Inserts for Director
 
-INSERT INTO Director (URLID, FirstName, MiddleName, LastName, PlaceOfBirth, Height, Spouse, Bdate, Biography, DateOfBirth, DateOfDeath)
-VALUES ('D00000001', 'Christopher', 'Nolan', 'Nolan', 'London', 182.0, 'Emma', TO_DATE('1970-07-30', 'YYYY-MM-DD'), 'Christopher Nolan is a British-American film director, producer, and screenwriter. He is known for his distinctive visual style and complex storytelling.', TO_DATE('1970-07-30', 'YYYY-MM-DD'), NULL);
+INSERT INTO Director (URLID, FirstName, MiddleName, LastName, PlaceOfBirth, Height, Spouse, Bdate, Biography, DateOfBirth, DateOfDeath, Award)
+VALUES ('D00000001', 'Christopher', 'Nolan', 'Nolan', 'London', 182.0, 'Emma', TO_DATE('1970-07-30', 'YYYY-MM-DD'), 'Christopher Nolan is a British-American film director, producer, and screenwriter. He is known for his distinctive visual style and complex storytelling.', TO_DATE('1970-07-30', 'YYYY-MM-DD'), NULL, 'Oscar');
 
-INSERT INTO Director (URLID, FirstName, MiddleName, LastName, PlaceOfBirth, Height, Spouse, Bdate, Biography, DateOfBirth, DateOfDeath)
-VALUES ('D00000002', 'Steven', 'Allan', 'Spielberg', 'Cincinnati', 172.0, 'Kate', TO_DATE('1946-12-18', 'YYYY-MM-DD'), 'Steven Spielberg is an American film director, producer, and screenwriter. He is considered one of the founding pioneers of the New Hollywood era and one of the most popular directors and producers in film history.', TO_DATE('1946-12-18', 'YYYY-MM-DD'), NULL);
+INSERT INTO Director (URLID, FirstName, MiddleName, LastName, PlaceOfBirth, Height, Spouse, Bdate, Biography, DateOfBirth, DateOfDeath, Award)
+VALUES ('D00000002', 'Steven', 'Allan', 'Spielberg', 'Cincinnati', 172.0, 'Kate', TO_DATE('1946-12-18', 'YYYY-MM-DD'), 'Steven Spielberg is an American film director, producer, and screenwriter. He is considered one of the founding pioneers of the New Hollywood era and one of the most popular directors and producers in film history.', TO_DATE('1946-12-18', 'YYYY-MM-DD'), NULL, 'Golden Globe');
 
-INSERT INTO Director (URLID, FirstName, MiddleName, LastName, PlaceOfBirth, Height, Spouse, Bdate, Biography, DateOfBirth, DateOfDeath)
-VALUES ('D00000003', 'Martin', 'Charles', 'Scorsese', 'New York', 163.0, 'Helen', TO_DATE('1942-11-17', 'YYYY-MM-DD'), 'Martin Scorsese is an American film director, producer, screenwriter, and actor. He is widely regarded as one of the most significant and influential directors in film history.', TO_DATE('1942-11-17', 'YYYY-MM-DD'), NULL);
+INSERT INTO Director (URLID, FirstName, MiddleName, LastName, PlaceOfBirth, Height, Spouse, Bdate, Biography, DateOfBirth, DateOfDeath, Award)
+VALUES ('D00000003', 'Martin', 'Charles', 'Scorsese', 'New York', 163.0, 'Helen', TO_DATE('1942-11-17', 'YYYY-MM-DD'), 'Martin Scorsese is an American film director, producer, screenwriter, and actor. He is widely regarded as one of the most significant and influential directors in film history.', TO_DATE('1942-11-17', 'YYYY-MM-DD'), NULL, 'BAFTA');
 
 -- Insert into Director_Children table
 INSERT INTO Director_Children (URLID, Child)
@@ -238,11 +218,6 @@ VALUES ('D00000003', 'Goodfellas Behind the Scenes');
 ----------------------------------------------------------------------
 
 -- Director Foreign Keys
-
--- Foreign Key Director_Awards URLID that points to the URLID of the Director table
-ALTER TABLE Director_Awards
-ADD CONSTRAINT director_awards_fk FOREIGN KEY(URLID)
-REFERENCES Director(URLID);
 
 -- Foreign Key Director_Children URLID that points to the URLID of the Director table
 ALTER TABLE Director_Children
@@ -294,6 +269,11 @@ ADD CONSTRAINT streaming_fk FOREIGN KEY(StreamingID)
 REFERENCES Streaming(StreamingID);
 
 -- Derived Attributes
+
+-- Example query to calculate the age of a director and retrieve it: SELECT URLID,
+-- FirstName, MiddleName, LastName,
+-- Age
+-- FROM Director_With_Age;
 
 -- View to calculate the Age derived attribute for each director
 CREATE VIEW Director_With_Age AS
