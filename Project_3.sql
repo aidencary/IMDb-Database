@@ -71,8 +71,15 @@ CREATE TABLE Director(
     Bdate       DATE,
     Biography   VARCHAR2(1000),
     DateOfBirth DATE,
-    DateOfDeath DATE DEFAULT NULL,
-    Award       VARCHAR2(100) -- Single-value attribute for awards
+    DateOfDeath DATE DEFAULT NULL
+);
+
+-- Director_Awards table
+
+CREATE TABLE Director_Awards(
+    URLID   CHAR(9) CONSTRAINT Director_Awards_URLID_FK REFERENCES Director(URLID),
+    Award VARCHAR2(100),
+    CONSTRAINT Director_Awards_PK PRIMARY KEY (URLID, Award)
 );
 
 -- Director_Children table
